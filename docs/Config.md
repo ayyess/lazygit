@@ -93,6 +93,7 @@ git:
     useConfig: false
   commit:
     signOff: false
+    wrapCommitMessageAt: 72 # automatic wrap-as-you-type width for commit message body (set to -1 to disable)
   merging:
     # only applicable to unix users
     manualCommit: false

@@ -237,6 +237,9 @@ type PagingConfig struct {
 type CommitConfig struct {
 	// If true, pass '--signoff' flag when committing
 	SignOff bool `yaml:"signOff"`
+	// Automatic wrap-as-you-type for commit message body. Defaults to 80; set
+	// to -1 to disable auto-wrapping.
+	WrapCommitMessageAt int `yaml:"wrapCommitMessageAt"`
 }
 
 type MergingConfig struct {
@@ -653,7 +656,8 @@ func GetDefaultConfig() *UserConfig {
 				ExternalDiffCommand: "",
 			},
 			Commit: CommitConfig{
-				SignOff: false,
+				SignOff:             false,
+				WrapCommitMessageAt: 72,
 			},
 			Merging: MergingConfig{
 				ManualCommit: false,

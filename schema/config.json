@@ -412,6 +412,11 @@
             "signOff": {
               "type": "boolean",
               "description": "If true, pass '--signoff' flag when committing"
+            },
+            "wrapCommitMessageAt": {
+              "type": "integer",
+              "description": "Automatic wrap-as-you-type for commit message body. Defaults to 80; set\nto -1 to disable auto-wrapping.",
+              "default": 72
             }
           },
           "additionalProperties": false,
