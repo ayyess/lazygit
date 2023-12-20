@@ -296,10 +296,11 @@ func (self *LocalCommitsController) reword(commit *models.Commit) error {
 		return self.c.Error(err)
 	}
 
+	unwrappedMessage := helpers.TryRemoveHardLineBreaks(commitMessage, self.c.UserConfig.Git.Commit.WrapCommitMessageAt)
 	return self.c.Helpers().Commits.OpenCommitMessagePanel(
 		&helpers.OpenCommitMessagePanelOpts{
 			CommitIndex:      self.context().GetSelectedLineIdx(),
-			InitialMessage:   commitMessage,
+			InitialMessage:   unwrappedMessage,
 			SummaryTitle:     self.c.Tr.Actions.RewordCommit,
 			DescriptionTitle: self.c.Tr.CommitDescriptionTitle,
 			PreserveMessage:  false,

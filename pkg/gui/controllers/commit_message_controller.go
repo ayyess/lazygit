@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
 	"github.com/jesseduffield/lazygit/pkg/gui/context"
+	"github.com/jesseduffield/lazygit/pkg/gui/controllers/helpers"
 	"github.com/jesseduffield/lazygit/pkg/gui/types"
 )
 
@@ -119,7 +120,8 @@ func (self *CommitMessageController) setCommitMessageAtIndex(index int) (bool, e
 		}
 		return false, self.c.ErrorMsg(self.c.Tr.CommitWithoutMessageErr)
 	}
-	self.c.Helpers().Commits.UpdateCommitPanelView(commitMessage)
+	self.c.Helpers().Commits.UpdateCommitPanelView(
+		helpers.TryRemoveHardLineBreaks(commitMessage, self.c.UserConfig.Git.Commit.WrapCommitMessageAt))
 	return true, nil
 }
 
