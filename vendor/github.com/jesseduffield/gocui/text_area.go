@@ -201,6 +201,14 @@ func (self *TextArea) DeleteToStartOfLine() {
 		return
 	}
 
+	// otherwise, if we're at a soft line start, skip left past the soft line
+	// break, so we'll end up deleting the previous line. This seems like the
+	// only reasonable behavior in this case, as you can't delete just the soft
+	// line break.
+	if self.atSoftLineStart() {
+		self.cursor--
+	}
+
 	// otherwise, you delete everything up to the start of the current line, without
 	// deleting the newline character
 	newlineIndex := self.closestNewlineOnLeft()
@@ -214,10 +222,20 @@ func (self *TextArea) DeleteToEndOfLine() {
 	if self.atEnd() {
 		return
 	}
+
+	// if we're at the end of the line, delete just the newline character
 	if self.atLineEnd() {
 		self.content = append(self.content[:self.cursor], self.content[self.cursor+1:]...)
 		self.autoWrapContent()
 		return
+	}
+
+	// otherwise, if we're at a soft line end, skip right past the soft line
+	// break, so we'll end up deleting the next line. This seems like the
+	// only reasonable behavior in this case, as you can't delete just the soft
+	// line break.
+	if self.atSoftLineEnd() {
+		self.cursor++
 	}
 
 	lineEndIndex := self.closestNewlineOnRight()
@@ -227,7 +245,7 @@ func (self *TextArea) DeleteToEndOfLine() {
 }
 
 func (self *TextArea) GoToStartOfLine() {
-	if self.atLineStart() {
+	if self.atSoftLineStart() {
 		return
 	}
 
@@ -238,15 +256,21 @@ func (self *TextArea) GoToStartOfLine() {
 }
 
 func (self *TextArea) closestNewlineOnLeft() int {
+	wrappedCursor := self.origCursorToWrappedCursor(self.cursor)
+
 	newlineIndex := -1
 
-	for i, r := range self.content[0:self.cursor] {
+	for i, r := range self.wrappedContent[0:wrappedCursor] {
 		if r == '\n' {
 			newlineIndex = i
 		}
 	}
 
-	return newlineIndex
+	unwrappedNewlineIndex := self.wrappedCursorToOrigCursor(newlineIndex)
+	if unwrappedNewlineIndex >= 0 && self.content[unwrappedNewlineIndex] != '\n' {
+		unwrappedNewlineIndex--
+	}
+	return unwrappedNewlineIndex
 }
 
 func (self *TextArea) GoToEndOfLine() {
@@ -255,12 +279,22 @@ func (self *TextArea) GoToEndOfLine() {
 	}
 
 	self.cursor = self.closestNewlineOnRight()
+
+	// If the end of line is a soft line break, we need to move left by one so
+	// that we end up at the last whitespace before the line break. Otherwise
+	// we'd be at the start of the next line, since the newline character
+	// doesn't really exist in the real content.
+	if self.cursor < len(self.content) && self.content[self.cursor] != '\n' {
+		self.cursor--
+	}
 }
 
 func (self *TextArea) closestNewlineOnRight() int {
-	for i, r := range self.content[self.cursor:] {
+	wrappedCursor := self.origCursorToWrappedCursor(self.cursor)
+
+	for i, r := range self.wrappedContent[wrappedCursor:] {
 		if r == '\n' {
-			return self.cursor + i
+			return self.wrappedCursorToOrigCursor(wrappedCursor + i)
 		}
 	}
 
@@ -272,9 +306,21 @@ func (self *TextArea) atLineStart() bool {
 		(len(self.content) > self.cursor-1 && self.content[self.cursor-1] == '\n')
 }
 
+func (self *TextArea) atSoftLineStart() bool {
+	wrappedCursor := self.origCursorToWrappedCursor(self.cursor)
+	return wrappedCursor == 0 ||
+		(len(self.wrappedContent) > wrappedCursor-1 && self.wrappedContent[wrappedCursor-1] == '\n')
+}
+
 func (self *TextArea) atLineEnd() bool {
 	return self.atEnd() ||
 		(len(self.content) > self.cursor && self.content[self.cursor] == '\n')
+}
+
+func (self *TextArea) atSoftLineEnd() bool {
+	wrappedCursor := self.origCursorToWrappedCursor(self.cursor)
+	return wrappedCursor == len(self.wrappedContent) ||
+		(len(self.wrappedContent) > wrappedCursor+1 && self.wrappedContent[wrappedCursor+1] == '\n')
 }
 
 func (self *TextArea) BackSpaceWord() {
