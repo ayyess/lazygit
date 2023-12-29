@@ -426,7 +426,7 @@ func (self *BranchesController) createNewBranchWithName(newBranchName string) er
 	}
 
 	self.context().SetSelectedLineIdx(0)
-	return self.c.Refresh(types.RefreshOptions{Mode: types.ASYNC})
+	return self.c.Refresh(types.RefreshOptions{Mode: types.ASYNC, KeepBranchSelectionIndex: true})
 }
 
 func (self *BranchesController) checkedOutByOtherWorktree(branch *models.Branch) bool {
