@@ -31,7 +31,7 @@ var SortLocalBranches = NewIntegrationTest(NewIntegrationTestArgs{
 				Contains("second"),
 				Contains("first"),
 			).
-			SelectNextItem() // to test that the selection jumps back to the top when sorting
+			SelectNextItem() // to test that the same branch stays selected when changing sort order
 
 		t.Views().Branches().
 			Press(keys.Branches.SortOrder)
@@ -43,9 +43,9 @@ var SortLocalBranches = NewIntegrationTest(NewIntegrationTestArgs{
 		t.Views().Branches().
 			IsFocused().
 			Lines(
-				Contains("master").IsSelected(),
+				Contains("master"),
 				Contains("second"),
-				Contains("third"),
+				Contains("third").IsSelected(),
 				Contains("first"),
 			)
 
@@ -59,10 +59,10 @@ var SortLocalBranches = NewIntegrationTest(NewIntegrationTestArgs{
 		t.Views().Branches().
 			IsFocused().
 			Lines(
-				Contains("master").IsSelected(),
+				Contains("master"),
 				Contains("first"),
 				Contains("second"),
-				Contains("third"),
+				Contains("third").IsSelected(),
 			)
 	},
 })

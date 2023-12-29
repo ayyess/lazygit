@@ -628,7 +628,6 @@ func (self *BranchesController) createSortMenu() error {
 		if self.c.GetAppState().LocalBranchSortOrder != sortOrder {
 			self.c.GetAppState().LocalBranchSortOrder = sortOrder
 			self.c.SaveAppStateAndLogError()
-			self.c.Contexts().Branches.SetSelectedLineIdx(0)
 			return self.c.Refresh(types.RefreshOptions{Mode: types.ASYNC, Scope: []types.RefreshableView{types.BRANCHES}})
 		}
 		return nil
