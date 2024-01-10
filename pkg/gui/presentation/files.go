@@ -122,16 +122,18 @@ func getFileLine(
 	name := fileNameAtDepth(node, treeDepth)
 	output := ""
 
-	restColor := theme.DefaultTextColor
-	nameColor := restColor
+	var nameColor style.TextStyle
 
 	file := node.File
 
 	indentation := strings.Repeat("  ", visualDepth)
 
-	isFullyStaged := hasStagedChanges && !hasUnstagedChanges
-	if isFullyStaged {
+	if hasStagedChanges && !hasUnstagedChanges {
 		nameColor = style.FgGreen
+	} else if hasStagedChanges {
+		nameColor = style.FgYellow
+	} else {
+		nameColor = theme.DefaultTextColor
 	}
 
 	if file == nil {
@@ -141,17 +143,14 @@ func getFileLine(
 			arrow = COLLAPSED_ARROW
 		}
 
-		arrowStyle := theme.DefaultTextColor
-		if hasStagedChanges {
-			arrowStyle = style.FgGreen
-		}
+		arrowStyle := nameColor
 
 		output += arrowStyle.Sprint(arrow) + " "
 	} else {
 		// Sprinting the space at the end in the specific style is for the sake of
 		// when a reverse style is used in the theme, which looks ugly if you just
 		// use the default style
-		output += indentation + formatFileStatus(file, restColor) + restColor.Sprint(" ")
+		output += indentation + formatFileStatus(file, nameColor) + nameColor.Sprint(" ")
 	}
 
 	isSubmodule := file != nil && file.IsSubmodule(submoduleConfigs)
@@ -161,7 +160,7 @@ func getFileLine(
 	if icons.IsIconEnabled() {
 		icon := icons.IconForFile(name, isSubmodule, isLinkedWorktree, isDirectory)
 		paint := color.C256(icon.Color, false)
-		output += paint.Sprint(icon.Icon) + restColor.Sprint(" ")
+		output += paint.Sprint(icon.Icon) + nameColor.Sprint(" ")
 	}
 
 	output += nameColor.Sprint(utils.EscapeSpecialChars(name))
@@ -207,43 +206,34 @@ func getCommitFileLine(
 
 	nameColor := theme.DefaultTextColor
 
+	switch status {
+	case patch.WHOLE:
+		nameColor = style.FgGreen
+	case patch.PART:
+		nameColor = style.FgYellow
+	case patch.UNSELECTED:
+		nameColor = theme.DefaultTextColor
+	}
+
 	if isDirectory {
 		arrow := EXPANDED_ARROW
 		if isCollapsed {
 			arrow = COLLAPSED_ARROW
 		}
 
-		var arrowColor style.TextStyle
-		switch status {
-		case patch.WHOLE:
-			arrowColor = style.FgGreen
-			nameColor = style.FgGreen
-		case patch.PART:
-			arrowColor = style.FgGreen
-			nameColor = theme.DefaultTextColor
-		case patch.UNSELECTED:
-			arrowColor = theme.DefaultTextColor
-			nameColor = theme.DefaultTextColor
-		}
-
-		output += arrowColor.Sprint(arrow) + " "
+		output += nameColor.Sprint(arrow) + " "
 	} else {
 		var symbol string
-		var symbolStyle style.TextStyle
+		symbolStyle := nameColor
 
 		switch status {
 		case patch.WHOLE:
-			nameColor = style.FgGreen
 			symbol = "●"
-			symbolStyle = style.FgGreen
 		case patch.PART:
-			nameColor = theme.DefaultTextColor
 			symbol = "◐"
-			symbolStyle = style.FgGreen
 		case patch.UNSELECTED:
-			nameColor = theme.DefaultTextColor
 			symbol = commitFile.ChangeStatus
-			symbolStyle = getColorForChangeStatus(commitFile.ChangeStatus)
+			symbolStyle = getColorForChangeStatus(symbol)
 		}
 
 		output += symbolStyle.Sprint(symbol) + " "
