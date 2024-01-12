@@ -30,11 +30,12 @@ func RenderFileTree(
 	tree filetree.IFileTree,
 	diffName string,
 	submoduleConfigs []*models.SubmoduleConfig,
+	showFileIcons bool,
 ) []string {
 	return renderAux(tree.GetRoot().Raw(), tree.CollapsedPaths(), "", -1, func(node *filetree.Node[models.File], depth int) string {
 		fileNode := filetree.NewFileNode(node)
 
-		return getFileLine(fileNode.GetHasUnstagedChanges(), fileNode.GetHasStagedChanges(), fileNameAtDepth(node, depth), diffName, submoduleConfigs, node.File)
+		return getFileLine(fileNode.GetHasUnstagedChanges(), fileNode.GetHasStagedChanges(), fileNameAtDepth(node, depth), diffName, showFileIcons, submoduleConfigs, node.File)
 	})
 }
 
@@ -42,6 +43,7 @@ func RenderCommitFileTree(
 	tree *filetree.CommitFileTreeViewModel,
 	diffName string,
 	patchBuilder *patch.PatchBuilder,
+	showFileIcons bool,
 ) []string {
 	return renderAux(tree.GetRoot().Raw(), tree.CollapsedPaths(), "", -1, func(node *filetree.Node[models.CommitFile], depth int) string {
 		// This is a little convoluted because we're dealing with either a leaf or a non-leaf.
@@ -61,7 +63,7 @@ func RenderCommitFileTree(
 			status = patch.PART
 		}
 
-		return getCommitFileLine(commitFileNameAtDepth(node, depth), diffName, node.File, status)
+		return getCommitFileLine(commitFileNameAtDepth(node, depth), diffName, node.File, status, showFileIcons)
 	})
 }
 
@@ -119,7 +121,7 @@ func renderAux[T any](
 	return arr
 }
 
-func getFileLine(hasUnstagedChanges bool, hasStagedChanges bool, name string, diffName string, submoduleConfigs []*models.SubmoduleConfig, file *models.File) string {
+func getFileLine(hasUnstagedChanges bool, hasStagedChanges bool, name string, diffName string, showFileIcons bool, submoduleConfigs []*models.SubmoduleConfig, file *models.File) string {
 	// potentially inefficient to be instantiating these color
 	// objects with each render
 	partiallyModifiedColor := style.FgYellow
@@ -159,7 +161,7 @@ func getFileLine(hasUnstagedChanges bool, hasStagedChanges bool, name string, di
 	isLinkedWorktree := file != nil && file.IsWorktree
 	isDirectory := file == nil
 
-	if icons.IsIconEnabled() {
+	if showFileIcons {
 		icon := icons.IconForFile(name, isSubmodule, isLinkedWorktree, isDirectory)
 		paint := color.C256(icon.Color, false)
 		output += paint.Sprint(icon.Icon) + " "
@@ -174,7 +176,7 @@ func getFileLine(hasUnstagedChanges bool, hasStagedChanges bool, name string, di
 	return output
 }
 
-func getCommitFileLine(name string, diffName string, commitFile *models.CommitFile, status patch.PatchStatus) string {
+func getCommitFileLine(name string, diffName string, commitFile *models.CommitFile, status patch.PatchStatus, showFileIcons bool) string {
 	var colour style.TextStyle
 	if diffName == name {
 		colour = theme.DiffTerminalColor
@@ -200,7 +202,7 @@ func getCommitFileLine(name string, diffName string, commitFile *models.CommitFi
 	isLinkedWorktree := false
 	isDirectory := commitFile == nil
 
-	if icons.IsIconEnabled() {
+	if showFileIcons {
 		icon := icons.IconForFile(name, isSubmodule, isLinkedWorktree, isDirectory)
 		paint := color.C256(icon.Color, false)
 		output += paint.Sprint(icon.Icon) + " "
