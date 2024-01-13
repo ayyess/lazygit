@@ -1427,7 +1427,31 @@ func (v *View) SelectedLine() string {
 	if len(v.lines) == 0 {
 		return ""
 	}
-	line := v.lines[v.SelectedLineIdx()]
+
+	return v.lineContentAtIdx(v.SelectedLineIdx())
+}
+
+// expected to only be used in tests
+func (v *View) SelectedLines() []string {
+	v.writeMutex.Lock()
+	defer v.writeMutex.Unlock()
+
+	if len(v.lines) == 0 {
+		return nil
+	}
+
+	startIdx, endIdx := v.SelectedLineRange()
+
+	lines := make([]string, 0, endIdx-startIdx+1)
+	for i := startIdx; i <= endIdx; i++ {
+		lines = append(lines, v.lineContentAtIdx(i))
+	}
+
+	return lines
+}
+
+func (v *View) lineContentAtIdx(idx int) string {
+	line := v.lines[idx]
 	str := lineType(line).String()
 	return strings.Replace(str, "\x00", "", -1)
 }
@@ -1436,6 +1460,25 @@ func (v *View) SelectedPoint() (int, int) {
 	cx, cy := v.Cursor()
 	ox, oy := v.Origin()
 	return cx + ox, cy + oy
+}
+
+func (v *View) SelectedLineRange() (int, int) {
+	_, cy := v.Cursor()
+	_, oy := v.Origin()
+
+	start := cy + oy
+
+	if v.rangeSelectStartY == -1 {
+		return start, start
+	}
+
+	end := v.rangeSelectStartY
+
+	if start > end {
+		return end, start
+	} else {
+		return start, end
+	}
 }
 
 func (v *View) RenderTextArea() {
