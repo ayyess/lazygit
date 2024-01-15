@@ -59,7 +59,7 @@ var QuickStart = NewIntegrationTest(NewIntegrationTestArgs{
 
 		t.Views().Branches().
 			Focus().
-			NavigateToLine(Contains("feature-branch")).
+			NavigateToLine(Contains("feature-branch222")).
 			Press(keys.Universal.Select)
 
 		t.Views().Commits().
