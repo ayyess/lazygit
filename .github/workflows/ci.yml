@@ -97,8 +97,7 @@ jobs:
           # See https://go.dev/blog/integration-test-coverage
           LAZYGIT_GOCOVERDIR: /tmp/code_coverage
         run: |
-          mkdir -p /tmp/code_coverage
-          ./scripts/run_integration_tests.sh
+          mkdir -p /tmp/code_coverage && ./scripts/run_integration_tests.sh
       - name: Upload code coverage artifacts
         uses: actions/upload-artifact@v3
         with:
